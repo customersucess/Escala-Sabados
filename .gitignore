@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vercel/
+.sites-runtime/
+*.zip
+*.log
+.env*
+!.env.example
