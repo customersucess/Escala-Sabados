@@ -26,7 +26,7 @@ import {
   sabadosDoMes,
 } from '../../../shared/utils/datas.js';
 import { descreverStatus, ROTULOS_STATUS, statusNaData } from '../../atendentes/domain/atendente.js';
-import { exportarEscala } from '../../importacao/services/exportacaoPlanilha.js';
+import { exportarEscala } from '../../importacao/services/exportacaoPdf.js';
 import { gerarEscala } from '../domain/gerarEscala.js';
 import {
   ATENDENTES_POR_SABADO,
@@ -221,7 +221,7 @@ export default function PaginaEscala({
             onClick={() => executar(() => exportarEscala(escala, atendentes))}
           >
             <Download size={16} />
-            Exportar
+            Exportar PDF
           </button>
           <button
             type="button"

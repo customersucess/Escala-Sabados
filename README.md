@@ -58,7 +58,7 @@ src/
       domain/             status na data, experiência, descrições para tooltips
       components/         página/tabela, formulário, histórico
     importacao/
-      services/           leitura e exportação de planilhas (SheetJS)
+      services/           leitura de planilhas (SheetJS) e exportação da escala em PDF
       components/         página de envio e conferência
   shared/
     components/           Modal, Etiqueta, Dica (tooltip), Avatar, Aviso…
@@ -74,4 +74,4 @@ Convenções: nomes em português e camelCase para funções, variáveis e arqui
 
 A tipografia usa **Geist** (servida pelo próprio build, via `@fontsource-variable/geist`), com paleta zinc, cantos de 1rem nos cartões, botões em formato pílula e o vermelho da Sempre (`#d5161e`) como cor de destaque. Os tokens ficam no início de `src/shared/styles/global.css`.
 
-Não há autenticação, notificações ou sincronização entre usuários. Limpar os dados do navegador remove o cadastro e o histórico local. O Excel exportado serve para compartilhar a escala, não como backup completo.
+Não há autenticação, notificações ou sincronização entre usuários. Limpar os dados do navegador remove o cadastro e o histórico local. O PDF exportado serve para compartilhar a escala, não como backup completo.

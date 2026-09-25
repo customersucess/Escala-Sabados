@@ -1,5 +1,4 @@
 import * as XLSX from 'xlsx';
-import { formatarData } from '../../../shared/utils/datas.js';
 
 function baixarPlanilha(linhas, nomeArquivo, nomeAba) {
   const pasta = XLSX.utils.book_new();
@@ -24,16 +23,3 @@ export const baixarModeloImportacao = () =>
     'modelo-funcionarios.xlsx',
     'Funcionários',
   );
-
-export function exportarEscala(escala, atendentes) {
-  const nomeDe = (id) => atendentes.find((atendente) => atendente.id === id)?.nome;
-  baixarPlanilha(
-    escala.sabados.map((sabado) => ({
-      Data: formatarData(sabado.data),
-      'Atendente 1': nomeDe(sabado.atendentes[0]),
-      'Atendente 2': nomeDe(sabado.atendentes[1]),
-    })),
-    `escala-${escala.mes}.xlsx`,
-    'Escala',
-  );
-}
