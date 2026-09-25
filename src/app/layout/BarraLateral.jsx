@@ -34,11 +34,9 @@ export default function BarraLateral({ abas, abaAtual, aoSelecionar }) {
           <CalendarCheck2 size={20} />
         </span>
         <h3>
-          Um time organizado.
-          <br />
-          Um sábado tranquilo.
+          Organização e clareza
         </h3>
-        <p>Planeje o atendimento com equilíbrio e clareza.</p>
+        <p>Planeje a escala no ultimo dia do mês</p>
       </div>
       <div className="barra-lateral__perfil">
         <span className="barra-lateral__perfil-avatar">SC</span>

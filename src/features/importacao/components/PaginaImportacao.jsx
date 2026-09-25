@@ -90,8 +90,8 @@ export default function PaginaImportacao({ atendentes, salvar, notificar, execut
               <FileSpreadsheet size={22} />
             </span>
             <div>
-              <h3>Precisa de um ponto de partida?</h3>
-              <p>Use nosso modelo para preencher os dados.</p>
+              <h3>Não sabe como preencher criar a planilha ?</h3>
+              <p>Baixe o modelo abaixo caso necessário!</p>
             </div>
             <button type="button" className="botao botao--secundario" onClick={() => executar(baixarModeloImportacao)}>
               <Download size={16} />

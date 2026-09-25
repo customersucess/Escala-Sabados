@@ -15,14 +15,14 @@ export default function PainelLateralEscala({
       <section className="cartao-regras">
         <div className="cartao-regras__titulo">
           <ShieldCheck size={19} />
-          <h3>Uma escala equilibrada</h3>
+          <h3>Regras utilizadas para geração</h3>
         </div>
         <p className="cartao-regras__subtitulo">As regras que cuidam do seu time.</p>
-        <Regra numero="01" titulo="Rodízio entre meses">
+        <Regra numero="01" titulo="Regra Justa de escala ">
           Quem atende no último sábado do mês descansa no primeiro sábado do mês seguinte. Nos demais sábados volta a
           ser sorteado normalmente.
         </Regra>
-        <Regra numero="02" titulo="Experiência compartilhada">
+        <Regra numero="02" titulo="Experiência do atendente">
           Novatos sempre trabalham com alguém que já completou 3 meses.
         </Regra>
         <Regra numero="03" titulo="Disponibilidade respeitada">
@@ -37,7 +37,7 @@ export default function PainelLateralEscala({
       <section className="cartao-descanso">
         <div className="cartao-descanso__cabecalho">
           <div>
-            <h3>Descanso no 1º sábado</h3>
+            <h3>Descanso no 1º sábado do mês </h3>
             {dataPrimeiroSabado && <p className="texto-suave texto-pequeno">{formatarData(dataPrimeiroSabado)}</p>}
           </div>
           <Clock3 size={18} />
