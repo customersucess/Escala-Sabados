@@ -5,9 +5,9 @@ const ALTURA_PAGINA = 841.89;
 const MARGEM = 50;
 const ALTURA_LINHA = 26;
 const COLUNAS = [
-  { titulo: 'Data', largura: 135 },
-  { titulo: 'Atendente 1', largura: 180 },
-  { titulo: 'Atendente 2', largura: 180.28 },
+  { titulo: 'Data', largura: 95 },
+  { titulo: 'Atendente 1', largura: 200 },
+  { titulo: 'Atendente 2', largura: 200.28 },
 ];
 
 // Caracteres fora do Latin-1 que existem na codificação WinAnsi das fontes padrão do PDF.
@@ -25,9 +25,36 @@ function paraWinAnsi(texto) {
 
 const escaparTexto = (texto) => paraWinAnsi(texto).replace(/[\\()]/g, (caractere) => `\\${caractere}`);
 
-function truncar(texto, largura, tamanhoFonte) {
-  const limite = Math.floor(largura / (tamanhoFonte * 0.52));
-  return texto.length > limite ? `${texto.slice(0, limite - 1)}…` : texto;
+// Larguras reais da Helvetica (em milésimos do tamanho da fonte) para os caracteres ASCII de 32 a 126.
+const LARGURAS_HELVETICA = [
+  278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556,
+  556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833,
+  722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556,
+  556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334,
+  260, 334, 584,
+];
+const TAMANHO_FONTE = 11;
+const TAMANHO_MINIMO = 8;
+
+function larguraTexto(conteudo, tamanhoFonte, negrito = false) {
+  const milesimos = Array.from(conteudo, (caractere) => {
+    // Letras acentuadas têm a mesma largura da letra base.
+    const codigo = caractere.normalize('NFD').charCodeAt(0);
+    return LARGURAS_HELVETICA[codigo - 32] ?? 600;
+  }).reduce((total, largura) => total + largura, 0);
+  return (milesimos / 1000) * tamanhoFonte * (negrito ? 1.08 : 1);
+}
+
+/** Reduz a fonte até o texto caber na coluna; só corta com "…" se nem o tamanho mínimo couber. */
+function ajustarTexto(conteudo, largura, negrito) {
+  for (let tamanho = TAMANHO_FONTE; tamanho >= TAMANHO_MINIMO; tamanho -= 0.5) {
+    if (larguraTexto(conteudo, tamanho, negrito) <= largura) return { conteudo, tamanho };
+  }
+  let cortado = conteudo;
+  while (cortado.length > 1 && larguraTexto(`${cortado}…`, TAMANHO_MINIMO, negrito) > largura) {
+    cortado = cortado.slice(0, -1);
+  }
+  return { conteudo: `${cortado.trimEnd()}…`, tamanho: TAMANHO_MINIMO };
 }
 
 const texto = (conteudo, x, y, { fonte = 'F1', tamanho = 11, cor = '0.13 0.13 0.15' } = {}) =>
@@ -46,9 +73,11 @@ function desenharTabela(linhas, topo) {
     let x = MARGEM;
     valores.forEach((valor, indice) => {
       const { largura } = COLUNAS[indice];
+      const ajustado = ajustarTexto(valor || '—', largura - 16, cabecalho);
       comandos.push(
-        texto(truncar(valor || '—', largura - 16, 11), x + 8, y + 9, {
+        texto(ajustado.conteudo, x + 8, y + 9, {
           fonte: cabecalho ? 'F2' : 'F1',
+          tamanho: ajustado.tamanho,
           cor: cabecalho ? '1 1 1' : '0.13 0.13 0.15',
         }),
       );
