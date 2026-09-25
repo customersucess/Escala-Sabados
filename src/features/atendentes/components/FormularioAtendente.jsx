@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import Modal from '../../../shared/components/Modal.jsx';
+import Seletor from '../../../shared/components/Seletor.jsx';
 import { dataValida } from '../../../shared/utils/datas.js';
 import { gerarId } from '../../../shared/utils/texto.js';
 import { criarAtendenteVazio, ROTULOS_STATUS, TIPOS_AUSENCIA } from '../domain/atendente.js';
+
+const OPCOES_STATUS = Object.entries(ROTULOS_STATUS).map(([valor, rotulo]) => ({ valor, rotulo }));
+const OPCOES_AUSENCIA = TIPOS_AUSENCIA.map((valor) => ({ valor, rotulo: ROTULOS_STATUS[valor] }));
 
 function validarFormulario(formulario) {
   if (!formulario.nome.trim() || (formulario.admissao && !dataValida(formulario.admissao))) {
@@ -24,6 +28,7 @@ function validarFormulario(formulario) {
 export default function FormularioAtendente({ atendente, aoSalvar, aoFechar }) {
   const [formulario, setFormulario] = useState(atendente ?? criarAtendenteVazio);
   const [erro, setErro] = useState('');
+  const idRotulo = useId();
 
   const atualizar = (campo, valor) => setFormulario({ ...formulario, [campo]: valor });
   const atualizarAusencia = (indice, campo, valor) =>
@@ -71,16 +76,15 @@ export default function FormularioAtendente({ atendente, aoSalvar, aoFechar }) {
               onChange={(evento) => atualizar('admissao', evento.target.value)}
             />
           </label>
-          <label className="campo">
-            Status sem período
-            <select value={formulario.status} onChange={(evento) => atualizar('status', evento.target.value)}>
-              {Object.entries(ROTULOS_STATUS).map(([chave, rotulo]) => (
-                <option value={chave} key={chave}>
-                  {rotulo}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="campo">
+            <span id={`${idRotulo}-status`}>Status sem período</span>
+            <Seletor
+              idRotulo={`${idRotulo}-status`}
+              valor={formulario.status}
+              opcoes={OPCOES_STATUS}
+              aoAlterar={(valor) => atualizar('status', valor)}
+            />
+          </div>
         </div>
         <p className="texto-suave texto-pequeno">
           Sem admissão, o atendente fica fora da escala. Status sem período valem até serem alterados; registre datas
@@ -105,19 +109,15 @@ export default function FormularioAtendente({ atendente, aoSalvar, aoFechar }) {
 
         {formulario.ausencias.map((ausencia, indice) => (
           <div className="linha-ausencia" key={ausencia.id}>
-            <label className="campo">
-              Motivo
-              <select
-                value={ausencia.tipo}
-                onChange={(evento) => atualizarAusencia(indice, 'tipo', evento.target.value)}
-              >
-                {TIPOS_AUSENCIA.map((tipo) => (
-                  <option value={tipo} key={tipo}>
-                    {ROTULOS_STATUS[tipo]}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="campo">
+              <span id={`${idRotulo}-motivo-${ausencia.id}`}>Motivo</span>
+              <Seletor
+                idRotulo={`${idRotulo}-motivo-${ausencia.id}`}
+                valor={ausencia.tipo}
+                opcoes={OPCOES_AUSENCIA}
+                aoAlterar={(valor) => atualizarAusencia(indice, 'tipo', valor)}
+              />
+            </div>
             <label className="campo">
               Início
               <input

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sabadosDoMes, somarMeses } from '../src/shared/utils/datas.js';
+import { sabadosDoMes, somarMeses, ultimoDiaUtilDoMes } from '../src/shared/utils/datas.js';
 import {
   estaEmExperiencia,
   podeSerExcluido,
@@ -9,6 +9,7 @@ import {
 } from '../src/features/atendentes/domain/atendente.js';
 import { gerarEscala } from '../src/features/escala/domain/gerarEscala.js';
 import {
+  dataReferenciaGeracao,
   estaElegivel,
   idsBloqueadosNaData,
   idsEmDescanso,
@@ -244,4 +245,39 @@ test('exclusão: escalado só pode ser apagado quando desligado', () => {
     mantidos.map((x) => x.id),
     ['a'],
   );
+});
+
+test('último dia útil do mês ignora sábado e domingo', () => {
+  assert.equal(ultimoDiaUtilDoMes('2026-09'), '2026-09-30');
+  assert.equal(ultimoDiaUtilDoMes('2026-10'), '2026-10-30');
+  assert.equal(ultimoDiaUtilDoMes('2026-05'), '2026-05-29');
+});
+
+test('escala do mês seguinte usa o último dia útil do mês anterior como referência', () => {
+  assert.equal(dataReferenciaGeracao('2026-10', '2026-09-25'), '2026-09-30');
+  assert.equal(dataReferenciaGeracao('2026-11', '2026-09-25'), '2026-10-30');
+  // Mês atual ou anterior: vale a data de hoje.
+  assert.equal(dataReferenciaGeracao('2026-09', '2026-09-25'), '2026-09-25');
+  assert.equal(dataReferenciaGeracao('2026-08', '2026-09-25'), '2026-09-25');
+  // Gerado no próprio mês: a data de montagem já passou, vale hoje.
+  assert.equal(dataReferenciaGeracao('2026-10', '2026-10-02'), '2026-10-02');
+});
+
+test('quem volta de férias antes do último dia útil entra na escala do mês seguinte', () => {
+  const dhyogo = criarAtendente('dhyogo', '2025-01-01', [{ inicio: '2026-09-14', fim: '2026-09-28', tipo: 'ferias' }]);
+  const atendentes = [...equipe(4), dhyogo];
+  const escalado = [];
+  for (let semente = 1; semente <= 20; semente++) {
+    const escala = gerarEscala(
+      '2026-10',
+      atendentes,
+      {},
+      {
+        aleatorio: sementeAleatoria(semente),
+        dataReferencia: dataReferenciaGeracao('2026-10', '2026-09-25'),
+      },
+    );
+    escalado.push(escala.sabados.some((s) => s.atendentes.includes('dhyogo')));
+  }
+  assert.ok(escalado.some(Boolean));
 });

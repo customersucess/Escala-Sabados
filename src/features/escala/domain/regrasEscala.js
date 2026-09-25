@@ -1,4 +1,4 @@
-import { deslocarMes, formatarData, sabadosDoMes } from '../../../shared/utils/datas.js';
+import { deslocarMes, formatarData, hoje, sabadosDoMes, ultimoDiaUtilDoMes } from '../../../shared/utils/datas.js';
 import { estaEmExperiencia, statusNaData } from '../../atendentes/domain/atendente.js';
 
 export const ATENDENTES_POR_SABADO = 2;
@@ -36,9 +36,20 @@ export const estaElegivel = (atendente, data, bloqueados = []) =>
   !bloqueados.includes(atendente.id);
 
 /**
- * Para gerar ou incluir alguém numa escala, o atendente precisa estar ativo hoje.
- * Quem está de férias, atestado, afastado, ausente ou desligado fica de fora
- * de qualquer escala gerada agora e só volta a ser considerado depois do retorno.
+ * A escala do mês seguinte é montada no último dia útil do mês anterior.
+ * Para meses futuros, a disponibilidade é avaliada nessa data (ou hoje, se ela já passou);
+ * para o mês atual e anteriores, vale a data de hoje da máquina.
+ */
+export function dataReferenciaGeracao(mes, dataHoje = hoje()) {
+  if (mes <= dataHoje.slice(0, 7)) return dataHoje;
+  const diaDaMontagem = ultimoDiaUtilDoMes(deslocarMes(mes, -1));
+  return diaDaMontagem > dataHoje ? diaDaMontagem : dataHoje;
+}
+
+/**
+ * Para gerar ou incluir alguém numa escala, o atendente precisa estar ativo na data de referência
+ * (ver `dataReferenciaGeracao`). Quem está de férias, atestado, afastado, ausente ou desligado nessa data
+ * fica de fora da escala e só volta a ser considerado depois do retorno.
  */
 export const disponivelHoje = (atendente, dataReferencia) => statusNaData(atendente, dataReferencia) === 'ativo';
 

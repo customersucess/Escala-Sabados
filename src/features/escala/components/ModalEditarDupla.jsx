@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Modal from '../../../shared/components/Modal.jsx';
+import Seletor from '../../../shared/components/Seletor.jsx';
 import { formatarData, hoje } from '../../../shared/utils/datas.js';
 import { estaEmExperiencia, ROTULOS_STATUS, statusNaData } from '../../atendentes/domain/atendente.js';
 import { disponivelHoje, estaElegivel, idsBloqueadosNaData } from '../domain/regrasEscala.js';
 
 function motivoIndisponivel(atendente, data, bloqueados, dataReferencia) {
   if (!disponivelHoje(atendente, dataReferencia)) {
-    return `${ROTULOS_STATUS[statusNaData(atendente, dataReferencia)].toLowerCase()} hoje`;
+    const quando = dataReferencia === hoje() ? 'hoje' : `em ${formatarData(dataReferencia)}`;
+    return `${ROTULOS_STATUS[statusNaData(atendente, dataReferencia)].toLowerCase()} ${quando}`;
   }
   if (bloqueados.includes(atendente.id)) return 'descanso do rodízio';
   const status = statusNaData(atendente, data);
@@ -14,11 +16,23 @@ function motivoIndisponivel(atendente, data, bloqueados, dataReferencia) {
   return 'admissão recente ou pendente';
 }
 
-export default function ModalEditarDupla({ sabado, atendentes, escalas, aoSalvar, aoFechar }) {
+export default function ModalEditarDupla({ sabado, atendentes, escalas, dataReferencia, aoSalvar, aoFechar }) {
   const [selecionados, setSelecionados] = useState([...sabado.atendentes]);
   const [erro, setErro] = useState('');
+  const idRotulo = useId();
   const bloqueados = idsBloqueadosNaData(sabado.data, escalas);
-  const dataReferencia = hoje();
+
+  const opcoes = atendentes.map((atendente) => {
+    // Quem já está na dupla pode permanecer; para incluir, precisa estar ativo na data de referência.
+    const jaNaDupla = sabado.atendentes.includes(atendente.id);
+    const elegivel =
+      estaElegivel(atendente, sabado.data, bloqueados) && (jaNaDupla || disponivelHoje(atendente, dataReferencia));
+    let complemento = '';
+    if (!elegivel)
+      complemento = `indisponível (${motivoIndisponivel(atendente, sabado.data, bloqueados, dataReferencia)})`;
+    else if (estaEmExperiencia(atendente, sabado.data)) complemento = 'em experiência';
+    return { valor: atendente.id, rotulo: atendente.nome, complemento, desabilitada: !elegivel };
+  });
 
   const salvar = (evento) => {
     evento.preventDefault();
@@ -37,33 +51,15 @@ export default function ModalEditarDupla({ sabado, atendentes, escalas, aoSalvar
     >
       <form className="formulario" onSubmit={salvar}>
         {[0, 1].map((vaga) => (
-          <label key={vaga} className="campo">
-            Atendente {vaga + 1}
-            <select
-              value={selecionados[vaga]}
-              onChange={(evento) =>
-                setSelecionados(selecionados.map((id, indice) => (indice === vaga ? evento.target.value : id)))
-              }
-            >
-              {atendentes.map((atendente) => {
-                // Quem já está na dupla pode permanecer; para incluir, precisa estar ativo hoje.
-                const jaNaDupla = sabado.atendentes.includes(atendente.id);
-                const elegivel =
-                  estaElegivel(atendente, sabado.data, bloqueados) &&
-                  (jaNaDupla || disponivelHoje(atendente, dataReferencia));
-                let complemento = '';
-                if (!elegivel)
-                  complemento = ` — indisponível (${motivoIndisponivel(atendente, sabado.data, bloqueados, dataReferencia)})`;
-                else if (estaEmExperiencia(atendente, sabado.data)) complemento = ' — em experiência';
-                return (
-                  <option key={atendente.id} value={atendente.id} disabled={!elegivel}>
-                    {atendente.nome}
-                    {complemento}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
+          <div key={vaga} className="campo">
+            <span id={`${idRotulo}-${vaga}`}>Atendente {vaga + 1}</span>
+            <Seletor
+              idRotulo={`${idRotulo}-${vaga}`}
+              valor={selecionados[vaga]}
+              opcoes={opcoes}
+              aoAlterar={(id) => setSelecionados(selecionados.map((atual, indice) => (indice === vaga ? id : atual)))}
+            />
+          </div>
         ))}
         {erro && (
           <p className="mensagem-erro" role="alert">

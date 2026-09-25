@@ -1930,6 +1930,133 @@ button:disabled {
   box-shadow: 0 0 0 4px var(--cor-anel-foco);
 }
 
+.seletor {
+  position: relative;
+  min-width: 0;
+}
+
+.seletor__gatilho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0 0.75rem 0 0.875rem;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-medio);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  text-align: left;
+  transition:
+    border-color var(--transicao),
+    box-shadow var(--transicao);
+}
+
+.seletor__gatilho:hover {
+  border-color: var(--cor-texto-fraco);
+}
+
+.seletor__gatilho:focus-visible,
+.seletor--aberto .seletor__gatilho {
+  border-color: var(--cor-texto);
+  outline: 0;
+  box-shadow: 0 0 0 4px var(--cor-anel-foco);
+}
+
+.seletor__valor {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.seletor__seta {
+  flex-shrink: 0;
+  color: var(--cor-texto-suave);
+  transition: transform var(--transicao);
+}
+
+.seletor--aberto .seletor__seta {
+  transform: rotate(180deg);
+}
+
+.seletor__lista {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  padding: 0.3125rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-medio);
+  background: var(--cor-superficie);
+  box-shadow: var(--sombra-elevada);
+  animation: abrir-seletor 140ms var(--curva-suave);
+}
+
+.seletor__opcao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5625rem 0.625rem;
+  border-radius: var(--raio-pequeno);
+  color: var(--cor-texto);
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.seletor__opcao--destacada {
+  background: var(--cor-superficie-2);
+}
+
+.seletor__opcao--selecionada {
+  font-weight: 600;
+}
+
+.seletor__opcao--desabilitada {
+  color: var(--cor-texto-fraco);
+  cursor: not-allowed;
+}
+
+.seletor__texto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.5rem;
+  min-width: 0;
+}
+
+.seletor__complemento {
+  color: var(--cor-texto-suave);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.seletor__opcao--desabilitada .seletor__complemento {
+  color: var(--cor-texto-fraco);
+}
+
+.seletor__marca {
+  flex-shrink: 0;
+  color: var(--cor-marca);
+}
+
+@keyframes abrir-seletor {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 .grade-formulario {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1952,7 +2079,8 @@ button:disabled {
   gap: 0.5rem;
 }
 
-.linha-ausencia input {
+.linha-ausencia input,
+.linha-ausencia .seletor__gatilho {
   padding: 0 0.5rem;
   font-size: 0.875rem;
 }

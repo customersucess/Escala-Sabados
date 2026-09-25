@@ -16,11 +16,25 @@ import {
 } from 'lucide-react';
 import CartaoIndicador from '../../../shared/components/CartaoIndicador.jsx';
 import Etiqueta from '../../../shared/components/Etiqueta.jsx';
-import { deslocarMes, hoje, mesAtual, mesValido, rotuloMes, sabadosDoMes } from '../../../shared/utils/datas.js';
+import {
+  deslocarMes,
+  formatarData,
+  hoje,
+  mesAtual,
+  mesValido,
+  rotuloMes,
+  sabadosDoMes,
+} from '../../../shared/utils/datas.js';
 import { descreverStatus, ROTULOS_STATUS, statusNaData } from '../../atendentes/domain/atendente.js';
 import { exportarEscala } from '../../importacao/services/exportacaoPlanilha.js';
 import { gerarEscala } from '../domain/gerarEscala.js';
-import { ATENDENTES_POR_SABADO, disponivelHoje, idsEmDescanso, validarEscala } from '../domain/regrasEscala.js';
+import {
+  ATENDENTES_POR_SABADO,
+  dataReferenciaGeracao,
+  disponivelHoje,
+  idsEmDescanso,
+  validarEscala,
+} from '../domain/regrasEscala.js';
 import CartaoSabado from './CartaoSabado.jsx';
 import ModalEditarDupla from './ModalEditarDupla.jsx';
 import PainelLateralEscala from './PainelLateralEscala.jsx';
@@ -46,9 +60,13 @@ export default function PaginaEscala({
   const datas = sabadosDoMes(mes);
   const escala = escalas[mes];
   const emDescanso = idsEmDescanso(mes, escalas);
-  const dataReferencia = hoje();
-  const problemas = escala ? validarEscala(escala, atendentes, escalas, { aPartirDe: dataReferencia }) : [];
-  const ativosHoje = atendentes.filter((atendente) => statusNaData(atendente, dataReferencia) === 'ativo');
+  const dataHoje = hoje();
+  // Disponibilidade avaliada no dia em que a escala do mês é montada (último dia útil do mês anterior).
+  const dataReferencia = dataReferenciaGeracao(mes, dataHoje);
+  const referenciaEHoje = dataReferencia === dataHoje;
+  const quandoReferencia = referenciaEHoje ? 'hoje' : `em ${formatarData(dataReferencia)}`;
+  const problemas = escala ? validarEscala(escala, atendentes, escalas, { aPartirDe: dataHoje }) : [];
+  const ativosHoje = atendentes.filter((atendente) => statusNaData(atendente, dataHoje) === 'ativo');
   const foraDaGeracao = atendentes
     .filter((atendente) => !disponivelHoje(atendente, dataReferencia) && atendente.status !== 'desligado')
     .map((atendente) => ({ atendente, status: descreverStatus(atendente, dataReferencia) }));
@@ -58,7 +76,7 @@ export default function PaginaEscala({
     setGerando(true);
     setTimeout(() => {
       executar(() => {
-        salvar({ escalas: { ...escalas, [mes]: gerarEscala(mes, atendentes, escalas) } });
+        salvar({ escalas: { ...escalas, [mes]: gerarEscala(mes, atendentes, escalas, { dataReferencia }) } });
         notificar('Escala sorteada e salva. Todos os sábados têm uma dupla válida.');
       });
       setGerando(false);
@@ -103,10 +121,12 @@ export default function PaginaEscala({
       .find((atendente) => atendente && !disponivelHoje(atendente, dataReferencia));
     if (indisponivel) {
       const status = ROTULOS_STATUS[statusNaData(indisponivel, dataReferencia)].toLowerCase();
-      throw new Error(`${indisponivel.nome} está com status ${status} hoje e só pode ser escalado após o retorno.`);
+      throw new Error(
+        `${indisponivel.nome} está com status ${status} ${quandoReferencia} e só pode ser escalado após o retorno.`,
+      );
     }
     const proximas = { ...escalas, [mes]: alterada };
-    const opcoes = { aPartirDe: dataReferencia };
+    const opcoes = { aPartirDe: dataHoje };
     const falhas = validarEscala(alterada, atendentes, proximas, opcoes);
     const escalaSeguinte = proximas[deslocarMes(mes, 1)];
     if (escalaSeguinte) falhas.push(...validarEscala(escalaSeguinte, atendentes, proximas, opcoes));
@@ -226,8 +246,14 @@ export default function PaginaEscala({
         <div className="aviso aviso--neutro fora-da-geracao">
           <Info size={18} />
           <div className="aviso__texto">
-            <strong>Fora da geração hoje ({foraDaGeracao.length})</strong>
-            <p>Só voltam a ser escalados depois do retorno.</p>
+            <strong>
+              Fora da geração {quandoReferencia} ({foraDaGeracao.length})
+            </strong>
+            <p>
+              {referenciaEHoje
+                ? 'Só voltam a ser escalados depois do retorno.'
+                : 'Data de montagem da escala: último dia útil do mês anterior. Só voltam a ser escalados depois do retorno.'}
+            </p>
             <div className="fora-da-geracao__lista">
               {foraDaGeracao.map(({ atendente, status }) => (
                 <Etiqueta key={atendente.id} variante={status.chave} dica={status.descricao}>
@@ -316,6 +342,7 @@ export default function PaginaEscala({
           sabado={sabadoEmEdicao}
           atendentes={atendentes}
           escalas={escalas}
+          dataReferencia={dataReferencia}
           aoSalvar={salvarDupla}
           aoFechar={() => setSabadoEmEdicao(null)}
         />

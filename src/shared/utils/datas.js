@@ -51,3 +51,11 @@ export const formatarDataCurta = (data) =>
 
 export const rotuloMes = (mes) =>
   new Date(`${mes}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+/** Último dia útil (segunda a sexta) do mês, pelo calendário local da máquina. Feriados não são considerados. */
+export function ultimoDiaUtilDoMes(mes) {
+  const [ano, numeroMes] = mes.split('-').map(Number);
+  const data = new Date(ano, numeroMes, 0, 12);
+  while (data.getDay() === 0 || data.getDay() === 6) data.setDate(data.getDate() - 1);
+  return paraIso(data);
+}

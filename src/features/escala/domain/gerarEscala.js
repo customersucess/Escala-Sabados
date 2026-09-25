@@ -1,5 +1,12 @@
-import { deslocarMes, formatarData, hoje, sabadosDoMes } from '../../../shared/utils/datas.js';
-import { disponivelHoje, duplaDeNovatos, estaElegivel, idsBloqueadosNaData, primeiroSabado } from './regrasEscala.js';
+import { deslocarMes, formatarData, sabadosDoMes } from '../../../shared/utils/datas.js';
+import {
+  dataReferenciaGeracao,
+  disponivelHoje,
+  duplaDeNovatos,
+  estaElegivel,
+  idsBloqueadosNaData,
+  primeiroSabado,
+} from './regrasEscala.js';
 
 const PESO_PARTICIPACAO_NO_MES = 10;
 const PESO_SABADO_CONSECUTIVO = 4;
@@ -43,7 +50,12 @@ function idsDoPrimeiroSabadoSeguinte(mes, escalas) {
  * disponibilidade, rodízio no primeiro sábado, novato sempre com experiente
  * e distribuição equilibrada de participações.
  */
-export function gerarEscala(mes, todosAtendentes, escalas, { aleatorio = Math.random, dataReferencia = hoje() } = {}) {
+export function gerarEscala(
+  mes,
+  todosAtendentes,
+  escalas,
+  { aleatorio = Math.random, dataReferencia = dataReferenciaGeracao(mes) } = {},
+) {
   const atendentes = todosAtendentes.filter((atendente) => disponivelHoje(atendente, dataReferencia));
   const sabados = sabadosDoMes(mes);
   const historico = contarHistorico(mes, escalas);
@@ -86,7 +98,7 @@ export function gerarEscala(mes, todosAtendentes, escalas, { aleatorio = Math.ra
       const complemento =
         eUltimoSabado && reservadosProximoMes.length ? ' (incluindo o primeiro sábado do mês seguinte)' : '';
       throw new Error(
-        `Não há dupla válida em ${formatarData(data)}. Verifique admissões, quem está de férias, atestado ou afastado hoje e o rodízio entre meses${complemento}.`,
+        `Não há dupla válida em ${formatarData(data)}. Verifique admissões, quem está de férias, atestado ou afastado em ${formatarData(dataReferencia)} e o rodízio entre meses${complemento}.`,
       );
     }
     duplaAnterior = escolhida.map((atendente) => atendente.id);
