@@ -32,7 +32,9 @@ import {
   ATENDENTES_POR_SABADO,
   dataReferenciaGeracao,
   disponivelHoje,
+  idsBloqueadosNaData,
   idsEmDescanso,
+  podeSerSelecionadoNaData,
   validarEscala,
 } from '../domain/regrasEscala.js';
 import CartaoSabado from './CartaoSabado.jsx';
@@ -115,14 +117,15 @@ export default function PaginaEscala({
       ),
       atualizadoEm: new Date().toISOString(),
     };
+    const bloqueados = idsBloqueadosNaData(sabadoEmEdicao.data, escalas);
     const incluidos = selecionados.filter((id) => !sabadoEmEdicao.atendentes.includes(id));
     const indisponivel = incluidos
       .map((id) => atendentes.find((atendente) => atendente.id === id))
-      .find((atendente) => atendente && !disponivelHoje(atendente, dataReferencia));
+      .find((atendente) => atendente && !podeSerSelecionadoNaData(atendente, sabadoEmEdicao.data, bloqueados));
     if (indisponivel) {
-      const status = ROTULOS_STATUS[statusNaData(indisponivel, dataReferencia)].toLowerCase();
+      const status = ROTULOS_STATUS[statusNaData(indisponivel, sabadoEmEdicao.data)].toLowerCase();
       throw new Error(
-        `${indisponivel.nome} está com status ${status} ${quandoReferencia} e só pode ser escalado após o retorno.`,
+        `${indisponivel.nome} está com status ${status} em ${formatarData(sabadoEmEdicao.data)} e não pode ser escalado nessa data.`,
       );
     }
     const proximas = { ...escalas, [mes]: alterada };
@@ -342,7 +345,6 @@ export default function PaginaEscala({
           sabado={sabadoEmEdicao}
           atendentes={atendentes}
           escalas={escalas}
-          dataReferencia={dataReferencia}
           aoSalvar={salvarDupla}
           aoFechar={() => setSabadoEmEdicao(null)}
         />

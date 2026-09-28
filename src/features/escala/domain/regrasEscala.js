@@ -35,6 +35,10 @@ export const estaElegivel = (atendente, data, bloqueados = []) =>
   statusNaData(atendente, data) === 'ativo' &&
   !bloqueados.includes(atendente.id);
 
+/** Inclusão manual usa a disponibilidade do sábado escolhido, não a data de montagem da escala. */
+export const podeSerSelecionadoNaData = (atendente, data, bloqueados = []) =>
+  estaElegivel(atendente, data, bloqueados);
+
 /**
  * A escala do mês seguinte é montada no último dia útil do mês anterior.
  * Para meses futuros, a disponibilidade é avaliada nessa data (ou hoje, se ela já passou);

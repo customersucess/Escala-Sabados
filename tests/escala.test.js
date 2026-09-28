@@ -12,6 +12,7 @@ import {
   dataReferenciaGeracao,
   estaElegivel,
   idsBloqueadosNaData,
+  podeSerSelecionadoNaData,
   idsEmDescanso,
   validarEscala,
 } from '../src/features/escala/domain/regrasEscala.js';
@@ -140,6 +141,14 @@ test('edição manual não permite repetidos, novatos juntos ou indisponibilidad
   assert.match(validarEscala(escala, atendentes, {})[0], /novatos/);
   escala.sabados[0].atendentes = ['a', 'a'];
   assert.match(validarEscala(escala, atendentes, {})[0], /diferentes/);
+});
+
+test('seleção manual considera a disponibilidade no sábado após o retorno das férias', () => {
+  const atendente = criarAtendente('ferias', '2025-01-01', [
+    { inicio: '2026-10-01', fim: '2026-10-10', tipo: 'ferias' },
+  ]);
+
+  assert.equal(podeSerSelecionadoNaData(atendente, '2026-10-31', []), true);
 });
 
 test('geração retroativa não fecha o mês com quem já abre o mês seguinte', () => {

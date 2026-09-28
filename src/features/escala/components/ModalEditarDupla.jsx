@@ -1,35 +1,28 @@
 import { useId, useState } from 'react';
 import Modal from '../../../shared/components/Modal.jsx';
 import Seletor from '../../../shared/components/Seletor.jsx';
-import { formatarData, hoje } from '../../../shared/utils/datas.js';
+import { formatarData } from '../../../shared/utils/datas.js';
 import { estaEmExperiencia, ROTULOS_STATUS, statusNaData } from '../../atendentes/domain/atendente.js';
-import { disponivelHoje, estaElegivel, idsBloqueadosNaData } from '../domain/regrasEscala.js';
+import { idsBloqueadosNaData, podeSerSelecionadoNaData } from '../domain/regrasEscala.js';
 
-function motivoIndisponivel(atendente, data, bloqueados, dataReferencia) {
-  if (!disponivelHoje(atendente, dataReferencia)) {
-    const quando = dataReferencia === hoje() ? 'hoje' : `em ${formatarData(dataReferencia)}`;
-    return `${ROTULOS_STATUS[statusNaData(atendente, dataReferencia)].toLowerCase()} ${quando}`;
-  }
+function motivoIndisponivel(atendente, data, bloqueados) {
   if (bloqueados.includes(atendente.id)) return 'descanso do rodízio';
   const status = statusNaData(atendente, data);
   if (status !== 'ativo') return ROTULOS_STATUS[status].toLowerCase();
   return 'admissão recente ou pendente';
 }
 
-export default function ModalEditarDupla({ sabado, atendentes, escalas, dataReferencia, aoSalvar, aoFechar }) {
+export default function ModalEditarDupla({ sabado, atendentes, escalas, aoSalvar, aoFechar }) {
   const [selecionados, setSelecionados] = useState([...sabado.atendentes]);
   const [erro, setErro] = useState('');
   const idRotulo = useId();
   const bloqueados = idsBloqueadosNaData(sabado.data, escalas);
 
   const opcoes = atendentes.map((atendente) => {
-    // Quem já está na dupla pode permanecer; para incluir, precisa estar ativo na data de referência.
-    const jaNaDupla = sabado.atendentes.includes(atendente.id);
-    const elegivel =
-      estaElegivel(atendente, sabado.data, bloqueados) && (jaNaDupla || disponivelHoje(atendente, dataReferencia));
+    const elegivel = podeSerSelecionadoNaData(atendente, sabado.data, bloqueados);
     let complemento = '';
     if (!elegivel)
-      complemento = `indisponível (${motivoIndisponivel(atendente, sabado.data, bloqueados, dataReferencia)})`;
+      complemento = `indisponível (${motivoIndisponivel(atendente, sabado.data, bloqueados)})`;
     else if (estaEmExperiencia(atendente, sabado.data)) complemento = 'em experiência';
     return { valor: atendente.id, rotulo: atendente.nome, complemento, desabilitada: !elegivel };
   });
